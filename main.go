@@ -14,12 +14,11 @@ type Todo struct {
 	Body      string `json:"body"`
 }
 
+var todos []Todo
+var idCounter int = 1
+
 func main() {
 	app := fiber.New()
-
-	// In-memory storage for todos
-	todos := []Todo{}
-	var idCounter int = 1
 
 	// GET /api/todos - Retrieve all todos
 	app.Get("/api/todos", func(c *fiber.Ctx) error {
@@ -37,28 +36,15 @@ func main() {
 			return c.Status(400).JSON(fiber.Map{"error": "Body cannot be empty"})
 		}
 
-		// Assign a unique ID
 		todo.ID = idCounter
 		idCounter++
 
-		// Append to todos slice
-		todos = append(todos, *todo)
-
-		// var x int = 5   //store in memory address 0x000012 and value is 5
-		// var p *int = &x // p is a pointer to memory address of x, storing the address of x
-
-		// fmt.Println("Value of x:", *p)  // prints 5
-		// fmt.Println("Address of x:", p) // prints memory address of x
+		todos = append(todos, todo)
 
 		return c.Status(201).JSON(todo)
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
-
-	//Update a todo
+	// PATCH /api/todos/:id - Mark todo as completed
 	app.Patch("/api/todos/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		for i, todo := range todos {
@@ -66,11 +52,26 @@ func main() {
 				todos[i].Completed = true
 				return c.Status(200).JSON(todos[i])
 			}
-
 		}
 		return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
-
 	})
+
+	// DELETE /api/todos/:id - Delete a todo
+	app.Delete("/api/todos/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+		for i, todo := range todos {
+			if fmt.Sprint(todo.ID) == id {
+				todos = append(todos[:i], todos[i+1:]...)
+				return c.Status(200).JSON(fiber.Map{"message": "Todo deleted successfully"})
+			}
+		}
+		return c.Status(404).JSON(fiber.Map{"error": "Todo not found"})
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 
 	log.Fatal(app.Listen(":" + port))
 }

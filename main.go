@@ -45,6 +45,9 @@ func main() {
 	initMongo()
 
 	app.Get("/api/todos", GetTodos)
+	app.Post("/api/todos", CreateTodo)
+	app.Patch("/api/todos/:id", UpdateTodo)
+	 app.Delete("/api/todos/:id", DeleteTodo)
 
-	log.Fatal(app.Listen(":8000"))
+	log.Fatal(app.Listen(":9000"))
 }

@@ -21,8 +21,10 @@ func GetTodos(c *fiber.Ctx) error {
 
 	cursor, err := collection.Find(c.Context(), bson.M{})
 	if err != nil {
+		fmt.Println("Error fetching todos:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch todos",
+			"details": err.Error(),
 		})
 	}
 	defer cursor.Close(c.Context())
